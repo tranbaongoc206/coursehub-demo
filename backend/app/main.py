@@ -373,3 +373,58 @@ def update_section_capacity(section_id: str, payload: SectionCapacityUpdate) -> 
         "section_id": section_id_upper,
         "new_capacity": payload.capacity
     }
+    
+from fastapi import Query # Thêm Query vào phần import của fastapi
+
+@app.get("/enrollment-events")
+def get_enrollment_events(
+    student_id: str | None = None,
+    event_type: str | None = None,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+) -> list[dict]:
+    sql = """
+        SELECT id, student_id, class_section_id, event_type, source, dataset, occurred_at
+        FROM enrollment_events
+        WHERE 1=1
+    """
+    parameters = {"skip": skip, "limit": limit}
+    
+    if student_id:
+        sql += " AND student_id = :student_id"
+        parameters["student_id"] = student_id
+    if event_type:
+        sql += " AND event_type = :event_type"
+        parameters["event_type"] = event_type
+
+    sql += " ORDER BY occurred_at DESC, id DESC OFFSET :skip LIMIT :limit"
+
+    with engine.begin() as connection:
+        rows = connection.execute(text(sql), parameters).mappings().all()
+        return [dict(row) for row in rows]
+    
+@app.post("/demo/rollback-test")
+def demo_rollback_test(payload: EnrollmentCreate):
+    insert_enrollment_sql = """
+        INSERT INTO enrollments (student_id, class_section_id)
+        VALUES (:student_id, :class_section_id)
+    """
+    # Giá trị 'INVALID_TYPE' sẽ làm nổ ngoại lệ Check Constraint
+    insert_invalid_event_sql = """
+        INSERT INTO enrollment_events (student_id, class_section_id, event_type)
+        VALUES (:student_id, :class_section_id, 'INVALID_TYPE')
+    """
+    params = {
+        "student_id": payload.student_id,
+        "class_section_id": payload.class_section_id,
+    }
+    try:
+        with engine.begin() as connection:
+            connection.execute(text(insert_enrollment_sql), params)
+            connection.execute(text(insert_invalid_event_sql), params)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Transaction bi loi va da ROLLBACK thanh cong",
+        ) from exc
+    return {"message": "Thanh cong"}
