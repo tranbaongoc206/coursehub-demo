@@ -5,12 +5,21 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from .database import engine
 from .schemas import EnrollmentCreate, SectionCapacityUpdate 
+from fastapi.middleware.cors import CORSMiddleware
  
 logger = logging.getLogger(__name__)
 app = FastAPI(
     title="CourseHub API",
     version="0.4.0",
     description="API thuc hanh Buoi 4 - transaction, locking va hieu nang",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "DELETE"],
+    allow_headers=["Content-Type"],
 )
 
 @app.get("/")
@@ -428,3 +437,17 @@ def demo_rollback_test(payload: EnrollmentCreate):
             detail="Transaction bi loi va da ROLLBACK thanh cong",
         ) from exc
     return {"message": "Thanh cong"}
+
+@app.get("/students/{student_id}/enrollment-events")
+def get_student_enrollment_events(
+    student_id: str,
+    page: int = Query(1, ge=1),
+    limit: int = Query(5, ge=1, le=20)
+):
+    offset = (page - 1) * limit
+    return {
+        "items": [],  
+        "total": 0,   
+        "page": page,
+        "limit": limit
+    }

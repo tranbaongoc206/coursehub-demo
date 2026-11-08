@@ -25,13 +25,6 @@ VALUES
 ('DM-01', 'INT2205', '2026-1', 'GV02', 2),
 ('PY-01', 'INT2206', '2026-1', 'GV02', 2);
 
-INSERT INTO class_sections
-(id, course_code, semester_code, lecturer_id, capacity)
-VALUES
-('WEB-01', 'INT2204', '2026-1', 'GV01', 3),
-('WEB-02', 'INT2204', '2026-1', 'GV01', 2),
-('DM-01', 'INT2205', '2026-1', 'GV02', 2),
-('PY-01', 'INT2206', '2026-1', 'GV02', 2);
 
 INSERT INTO enrollments (student_id, class_section_id) VALUES
 ('22000001', 'WEB-01'),
