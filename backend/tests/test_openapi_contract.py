@@ -25,4 +25,4 @@ def test_enrollment_methods_are_registered():
 
 def test_get_sections_method_is_registered():
     paths = app.openapi()["paths"]
-    assert "get" in paths["/section"]
+    assert "get" in paths["/sections"]
