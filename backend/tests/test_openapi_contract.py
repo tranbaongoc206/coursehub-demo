@@ -23,3 +23,6 @@ def test_enrollment_methods_are_registered():
         "/enrollments/{student_id}/{class_section_id}"
     ]
 
+def test_get_sections_method_is_registered():
+    paths = app.openapi()["paths"]
+    assert "get" in paths["/section"]
